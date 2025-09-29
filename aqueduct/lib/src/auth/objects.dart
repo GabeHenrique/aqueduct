@@ -15,13 +15,13 @@ class AuthClient {
   ///
   /// If this client supports scopes, [allowedScopes] must contain a list of scopes that tokens may request when authorized
   /// by this client.
-  AuthClient(String id, String hashedSecret, String salt,
-      {List<AuthScope> allowedScopes})
+  AuthClient(String id, String? hashedSecret, String? salt,
+      {List<AuthScope>? allowedScopes})
       : this.withRedirectURI(id, hashedSecret, salt, null,
             allowedScopes: allowedScopes);
 
   /// Creates an instance of a public [AuthClient].
-  AuthClient.public(String id, {List<AuthScope> allowedScopes})
+  AuthClient.public(String id, {List<AuthScope>? allowedScopes})
       : this.withRedirectURI(id, null, null, null,
             allowedScopes: allowedScopes);
 
@@ -30,41 +30,41 @@ class AuthClient {
   /// All values must be non-null. This is confidential client.
   AuthClient.withRedirectURI(
       this.id, this.hashedSecret, this.salt, this.redirectURI,
-      {List<AuthScope> allowedScopes}) {
+      {List<AuthScope>? allowedScopes}) {
     this.allowedScopes = allowedScopes;
   }
 
-  List<AuthScope> _allowedScopes;
+  List<AuthScope>? _allowedScopes;
 
   /// The ID of the client.
-  String id;
+  late String id;
 
   /// The hashed secret of the client.
   ///
   /// This value may be null if the client is public. See [isPublic].
-  String hashedSecret;
+  String? hashedSecret;
 
   /// The salt [hashedSecret] was hashed with.
   ///
   /// This value may be null if the client is public. See [isPublic].
-  String salt;
+  String? salt;
 
   /// The redirection URI for authorization codes and/or tokens.
   ///
   /// This value may be null if the client doesn't support the authorization code flow.
-  String redirectURI;
+  String? redirectURI;
 
   /// The list of scopes available when authorizing with this client.
   ///
   /// Scoping is determined by this instance; i.e. the authorizing client determines which scopes a token
   /// has. This list contains all valid scopes for this client. If null, client does not support scopes
   /// and all access tokens have same authorization.
-  List<AuthScope> get allowedScopes => _allowedScopes;
-  set allowedScopes(List<AuthScope> scopes) {
+  List<AuthScope>? get allowedScopes => _allowedScopes;
+  set allowedScopes(List<AuthScope>? scopes) {
     _allowedScopes = scopes?.where((s) {
       return !scopes.any((otherScope) =>
           s.isSubsetOrEqualTo(otherScope) && !s.isExactlyScope(otherScope));
-    })?.toList();
+    }).toList();
   }
 
   /// Whether or not this instance allows scoping or not.
@@ -107,32 +107,32 @@ class AuthClient {
 /// See the `package:aqueduct/managed_auth` library for a concrete implementation of this type.
 class AuthToken {
   /// The value to be passed as a Bearer Authorization header.
-  String accessToken;
+  String? accessToken;
 
   /// The value to be passed for refreshing a token.
-  String refreshToken;
+  String? refreshToken;
 
   /// The time this token was issued on.
-  DateTime issueDate;
+  late DateTime issueDate;
 
   /// The time when this token expires.
-  DateTime expirationDate;
+  late DateTime expirationDate;
 
   /// The type of token, currently only 'bearer' is valid.
-  String type;
+  String? type;
 
   /// The identifier of the resource owner.
   ///
   /// Tokens are owned by a resource owner, typically a User, Profile or Account
   /// in an application. This value is the primary key or identifying value of those
   /// instances.
-  int resourceOwnerIdentifier;
+  int? resourceOwnerIdentifier;
 
   /// The client ID this token was issued from.
-  String clientID;
+  late String clientID;
 
   /// Scopes this token has access to.
-  List<AuthScope> scopes;
+  List<AuthScope>? scopes;
 
   /// Whether or not this token is expired by evaluated [expirationDate].
   bool get isExpired {
@@ -167,29 +167,29 @@ class AuthToken {
 /// See the aqueduct/managed_auth library for a concrete implementation of this type.
 class AuthCode {
   /// The actual one-time code used to exchange for tokens.
-  String code;
+  String? code;
 
   /// The client ID the authorization code was issued under.
-  String clientID;
+  late String clientID;
 
   /// The identifier of the resource owner.
   ///
   /// Authorization codes are owned by a resource owner, typically a User, Profile or Account
   /// in an application. This value is the primary key or identifying value of those
   /// instances.
-  int resourceOwnerIdentifier;
+  int? resourceOwnerIdentifier;
 
   /// The timestamp this authorization code was issued on.
-  DateTime issueDate;
+  late DateTime issueDate;
 
   /// When this authorization code expires, recommended for 10 minutes after issue date.
-  DateTime expirationDate;
+  late DateTime expirationDate;
 
   /// Whether or not this authorization code has already been exchanged for a token.
-  bool hasBeenExchanged;
+  late bool hasBeenExchanged;
 
   /// Scopes the exchanged token will have.
-  List<AuthScope> requestedScopes;
+  List<AuthScope>? requestedScopes;
 
   /// Whether or not this code has expired yet, according to its [expirationDate].
   bool get isExpired {

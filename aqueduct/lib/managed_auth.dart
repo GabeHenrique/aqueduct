@@ -41,9 +41,11 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
   ManagedAuthToken.fromToken(AuthToken t) : super() {
     final tokenResourceOwner =
         entity.relationships["resourceOwner"]?.destinationEntity?.instanceOf();
-    if (tokenResourceOwner != null) {
-      tokenResourceOwner["id"] = t.resourceOwnerIdentifier;
+    if (tokenResourceOwner == null) {
+      throw StateError("Could not create resource owner instance");
     }
+    tokenResourceOwner["id"] = t.resourceOwnerIdentifier;
+    
     this
       ..accessToken = t.accessToken
       ..refreshToken = t.refreshToken
@@ -51,7 +53,7 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
       ..expirationDate = t.expirationDate
       ..type = t.type
       ..scope = t.scopes?.map((s) => s.toString()).join(" ")
-      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition?
+      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition
       ..client = (ManagedAuthClient()..id = t.clientID);
   }
 
@@ -59,13 +61,14 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
   ManagedAuthToken.fromCode(AuthCode code) : super() {
     final tokenResourceOwner =
         entity.relationships["resourceOwner"]?.destinationEntity?.instanceOf();
-    if (tokenResourceOwner != null) {
-      tokenResourceOwner["id"] = code.resourceOwnerIdentifier;
+    if (tokenResourceOwner == null) {
+      throw StateError("Could not create resource owner instance");
     }
+    tokenResourceOwner["id"] = code.resourceOwnerIdentifier;
 
     this
       ..code = code.code
-      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition?
+      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition
       ..issueDate = code.issueDate
       ..expirationDate = code.expirationDate
       ..scope = code.requestedScopes?.map((s) => s.toString()).join(" ")
@@ -80,7 +83,7 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
       ..issueDate = issueDate
       ..expirationDate = expirationDate
       ..type = type
-      ..resourceOwnerIdentifier = resourceOwner?.id
+      ..resourceOwnerIdentifier = resourceOwner.id
       ..scopes = scope?.split(" ").map((s) => AuthScope(s)).toList()
       ..clientID = client.id;
   }
@@ -90,7 +93,7 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
     return AuthCode()
       ..hasBeenExchanged = accessToken != null
       ..code = code
-      ..resourceOwnerIdentifier = resourceOwner?.id
+      ..resourceOwnerIdentifier = resourceOwner.id
       ..issueDate = issueDate
       ..requestedScopes = scope?.split(" ").map((s) => AuthScope(s)).toList()
       ..expirationDate = expirationDate
@@ -313,12 +316,31 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
   }
 
   @override
-  Future<AuthToken?> getToken(AuthServer server,
+  Future<AuthToken> getToken(AuthServer server,
       {String? byAccessToken, String? byRefreshToken}) async {
     if (byAccessToken != null && byRefreshToken != null) {
       throw ArgumentError(
           "Exactly one of 'byAccessToken' or 'byRefreshToken' must be non-null.");
     }
+
+    final query = Query<ManagedAuthToken>(context);
+    if (byAccessToken != null) {
+      query.where((o) => o.accessToken).equalTo(byAccessToken);
+    } else if (byRefreshToken != null) {
+      query.where((o) => o.refreshToken).equalTo(byRefreshToken);
+    } else {
+      throw ArgumentError(
+          "Either 'byAccessToken' or 'byRefreshToken' must be non-null.");
+    }
+
+    final token = await query.fetchOne();
+    if (token == null) {
+      throw AuthServerException(AuthRequestError.invalidGrant,
+          AuthClient.public("unknown"));
+    }
+
+    return token.asToken();
+  }
 
     final query = Query<ManagedAuthToken>(context);
     if (byAccessToken != null) {
@@ -402,12 +424,16 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
   }
 
   @override
-  Future<AuthCode?> getCode(AuthServer server, String code) async {
+  Future<AuthCode> getCode(AuthServer server, String code) async {
     final query = Query<ManagedAuthToken>(context)
       ..where((o) => o.code).equalTo(code);
 
     final storage = await query.fetchOne();
-    return storage?.asAuthCode();
+    if (storage == null) {
+      throw AuthServerException(AuthRequestError.invalidGrant,
+          AuthClient.public("unknown"));
+    }
+    return storage.asAuthCode();
   }
 
   @override
@@ -426,13 +452,18 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
   }
 
   @override
-  Future<AuthClient?> getClient(AuthServer server, String clientID) async {
+  @override  
+  Future<AuthClient> getClient(AuthServer server, String clientID) async {
     final query = Query<ManagedAuthClient>(context)
       ..where((o) => o.id).equalTo(clientID);
 
     final storage = await query.fetchOne();
+    if (storage == null) {
+      throw AuthServerException(AuthRequestError.invalidClient,
+          AuthClient.public(clientID));
+    }
 
-    return storage?.asClient();
+    return storage.asClient();
   }
 
   @override

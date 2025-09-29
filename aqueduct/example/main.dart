@@ -23,16 +23,16 @@ Future main() async {
 }
 
 class App extends ApplicationChannel {
-  ManagedContext context;
-  AuthServer authServer;
+  late ManagedContext context;
+  late AuthServer authServer;
 
   @override
   Future prepare() async {
     final config =
-        AppConfiguration.fromFile(File(options.configurationFilePath));
+        AppConfiguration.fromFile(options.configurationFilePath!);
     final db = config.database;
     final persistentStore = PostgreSQLPersistentStore.fromConnectionInfo(
-        db.username, db.password, db.host, db.port, db.databaseName);
+        db.username!, db.password!, db.host!, db.port!, db.databaseName!);
     context = ManagedContext(
         ManagedDataModel.fromCurrentMirrorSystem(), persistentStore);
 
@@ -101,18 +101,22 @@ class UserController extends ResourceController {
 }
 
 class AppConfiguration extends Configuration {
-  AppConfiguration.fromFile(File file) : super.fromFile(file);
-
-  DatabaseConfiguration database;
+  AppConfiguration();
+  
+  late DatabaseConfiguration database;
+  
+  static AppConfiguration fromFile(String filePath) {
+    return Configuration.fromFile<AppConfiguration>(filePath, () => AppConfiguration());
+  }
 }
 
 class User extends ManagedObject<_User>
     implements _User, ManagedAuthResourceOwner<_User> {
   @Serialize(input: true, output: false)
-  String password;
+  late String password;
 }
 
 class _User extends ResourceOwnerTableDefinition {
   @Column(unique: true)
-  String email;
+  late String email;
 }
