@@ -6,7 +6,7 @@ import 'dart:mirrors';
 import 'package:aqueduct/src/cli/metadata.dart';
 import 'package:aqueduct/src/cli/running_process.dart';
 import 'package:args/args.dart' as args;
-import 'package:runtime/runtime.dart';
+import 'package:aqueduct/src/utilities/runtime_stub.dart';
 import 'package:yaml/yaml.dart';
 import 'package:pub_semver/pub_semver.dart';
 

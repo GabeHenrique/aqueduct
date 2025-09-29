@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:aqueduct/src/application/channel.dart';
 import 'package:logging/logging.dart';
-import 'package:runtime/runtime.dart';
+import 'package:aqueduct/src/utilities/runtime_stub.dart';
 
 import '../http/controller.dart';
 import '../http/request.dart';
@@ -20,29 +20,34 @@ class ApplicationServer {
   ///
   /// You should not need to invoke this method directly.
   ApplicationServer(this.channelType, this.options, this.identifier) {
-    channel = (RuntimeContext.current[channelType] as ChannelRuntime).instantiateChannel()
-      ..server = this
-      ..options = options;
+    final runtime = RuntimeContext.current?[channelType] as ChannelRuntime?;
+    if (runtime != null) {
+      channel = runtime.instantiateChannel()
+        ..server = this
+        ..options = options;
+    } else {
+      throw StateError("Channel runtime not available for $channelType");
+    }
   }
 
   /// The configuration this instance used to start its [channel].
   ApplicationOptions options;
 
   /// The underlying [HttpServer].
-  HttpServer server;
+  late HttpServer server;
 
   /// The instance of [ApplicationChannel] serving requests.
-  ApplicationChannel channel;
+  late ApplicationChannel channel;
 
   /// The cached entrypoint of [channel].
-  Controller entryPoint;
+  late Controller entryPoint;
 
   final Type channelType;
 
   /// Target for sending messages to other [ApplicationChannel.messageHub]s.
   ///
   /// Events are added to this property by instances of [ApplicationMessageHub] and should not otherwise be used.
-  EventSink<dynamic> hubSink;
+  EventSink<dynamic>? hubSink;
 
   /// Whether or not this server requires an HTTPS listener.
   bool get requiresHTTPS => _requiresHTTPS;
@@ -52,7 +57,7 @@ class ApplicationServer {
   ///
   /// Each instance has its own identifier, a numeric value starting at 1, to identify it
   /// among other instances.
-  int identifier;
+  final int identifier;
 
   /// The logger of this instance
   Logger get logger => Logger("aqueduct");

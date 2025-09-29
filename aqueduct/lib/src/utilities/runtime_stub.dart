@@ -11,32 +11,16 @@ abstract class Runtime {
 
 /// Stub implementation for RuntimeContext
 abstract class RuntimeContext {
-  static RuntimeContext? get current => null;
+  static RuntimeContext? get current => _currentContext;
+  static RuntimeContext? _currentContext;
+  
+  // Operator to access context by type
+  dynamic operator [](Type type) => null;
 }
 
 /// Stub implementation for SourceCompiler
 abstract class SourceCompiler {
   String get name => "unknown";
-}
-
-/// Type alias for isolate entry function
-typedef IsolateEntryFunction = void Function(SendPort);
-
-/// Stub implementation for ChannelRuntime
-abstract class ChannelRuntime {
-  String get name;
-  IsolateEntryFunction get isolateEntryPoint;
-}
-
-/// Stub implementation for ServiceRegistry  
-class ServiceRegistry {
-  static void add<T>(T service) {
-    // Stub implementation - no-op
-  }
-  
-  static T? get<T>() {
-    return null;
-  }
 }
 
 /// Stub implementation for various runtime exceptions

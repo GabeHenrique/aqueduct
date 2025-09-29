@@ -344,13 +344,14 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
 
   @override
   @override
-  Future<T?> getResourceOwner(AuthServer server, String username) {
+  Future<ResourceOwner?> getResourceOwner(AuthServer server, String username) async {
     final query = Query<T>(context)
       ..where((o) => o.username).equalTo(username)
       ..returningProperties(
           (t) => [t.id, t.hashedPassword, t.salt, t.username]);
 
-    return query.fetchOne();
+    final result = await query.fetchOne();
+    return result; // T extends ManagedAuthResourceOwner which extends ResourceOwner
   }
 
   @override

@@ -29,13 +29,13 @@ class Application<T extends ApplicationChannel> {
   /// The [ApplicationServer] listening for HTTP requests while under test.
   ///
   /// This property is only valid when an application is started via [startOnCurrentIsolate].
-  ApplicationServer server;
+  late ApplicationServer server;
 
   /// The [ApplicationChannel] handling requests while under test.
   ///
   /// This property is only valid when an application is started via [startOnCurrentIsolate]. You use
   /// this value to access elements of your application channel during testing.
-  T get channel => server?.channel as T;
+  T get channel => server.channel as T;
 
   /// The logger that this application will write messages to.
   ///
@@ -61,7 +61,7 @@ class Application<T extends ApplicationChannel> {
   /// This value will return to false after [stop] has completed.
   bool get isRunning => _hasFinishedLaunching;
   bool _hasFinishedLaunching = false;
-  ChannelRuntime get _runtime => RuntimeContext.current[T] as ChannelRuntime;
+  ChannelRuntime? get _runtime => RuntimeContext.current?[T] as ChannelRuntime?;
 
   /// Starts this application, allowing it to handle HTTP requests.
   ///
