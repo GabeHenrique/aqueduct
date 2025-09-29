@@ -40,31 +40,35 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
   /// Instance from an [AuthToken].
   ManagedAuthToken.fromToken(AuthToken t) : super() {
     final tokenResourceOwner =
-        entity.relationships["resourceOwner"].destinationEntity.instanceOf();
-    tokenResourceOwner["id"] = t.resourceOwnerIdentifier;
+        entity.relationships["resourceOwner"]?.destinationEntity?.instanceOf();
+    if (tokenResourceOwner != null) {
+      tokenResourceOwner["id"] = t.resourceOwnerIdentifier;
+    }
     this
       ..accessToken = t.accessToken
       ..refreshToken = t.refreshToken
       ..issueDate = t.issueDate
       ..expirationDate = t.expirationDate
       ..type = t.type
-      ..scope = t.scopes?.map((s) => s.toString())?.join(" ")
-      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition
+      ..scope = t.scopes?.map((s) => s.toString()).join(" ")
+      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition?
       ..client = (ManagedAuthClient()..id = t.clientID);
   }
 
   /// Instance from an [AuthCode].
   ManagedAuthToken.fromCode(AuthCode code) : super() {
     final tokenResourceOwner =
-        entity.relationships["resourceOwner"].destinationEntity.instanceOf();
-    tokenResourceOwner["id"] = code.resourceOwnerIdentifier;
+        entity.relationships["resourceOwner"]?.destinationEntity?.instanceOf();
+    if (tokenResourceOwner != null) {
+      tokenResourceOwner["id"] = code.resourceOwnerIdentifier;
+    }
 
     this
       ..code = code.code
-      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition
+      ..resourceOwner = tokenResourceOwner as ResourceOwnerTableDefinition?
       ..issueDate = code.issueDate
       ..expirationDate = code.expirationDate
-      ..scope = code.requestedScopes?.map((s) => s.toString())?.join(" ")
+      ..scope = code.requestedScopes?.map((s) => s.toString()).join(" ")
       ..client = (ManagedAuthClient()..id = code.clientID);
   }
 
@@ -76,8 +80,8 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
       ..issueDate = issueDate
       ..expirationDate = expirationDate
       ..type = type
-      ..resourceOwnerIdentifier = resourceOwner.id
-      ..scopes = scope?.split(" ")?.map((s) => AuthScope(s))?.toList()
+      ..resourceOwnerIdentifier = resourceOwner?.id
+      ..scopes = scope?.split(" ").map((s) => AuthScope(s)).toList()
       ..clientID = client.id;
   }
 
@@ -86,9 +90,9 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
     return AuthCode()
       ..hasBeenExchanged = accessToken != null
       ..code = code
-      ..resourceOwnerIdentifier = resourceOwner.id
+      ..resourceOwnerIdentifier = resourceOwner?.id
       ..issueDate = issueDate
-      ..requestedScopes = scope?.split(" ")?.map((s) => AuthScope(s))?.toList()
+      ..requestedScopes = scope?.split(" ").map((s) => AuthScope(s)).toList()
       ..expirationDate = expirationDate
       ..clientID = client.id;
   }
@@ -98,7 +102,7 @@ class ManagedAuthToken extends ManagedObject<_ManagedAuthToken>
 class _ManagedAuthToken {
   /// A primary key identifier.
   @primaryKey
-  int id;
+  late int id;
 
   /// The authorization code of this token.
   ///
@@ -108,7 +112,7 @@ class _ManagedAuthToken {
   /// if this instance represents a token that was not created through
   /// the authorization code process.
   @Column(indexed: true, unique: true, nullable: true)
-  String code;
+  String? code;
 
   /// The access token of an authorization token.
   ///
@@ -116,39 +120,39 @@ class _ManagedAuthToken {
   /// access token. This value is null if this instance represents an
   /// unexchanged authorization code.
   @Column(indexed: true, unique: true, nullable: true)
-  String accessToken;
+  String? accessToken;
 
   /// The refresh token of an authorization token.
   ///
   /// If this token can be refreshed, this value is non-null.
   @Column(indexed: true, unique: true, nullable: true)
-  String refreshToken;
+  String? refreshToken;
 
   /// Scopes for this token, delimited by the space character.
   @Column(nullable: true)
-  String scope;
+  String? scope;
 
   /// When this token was last issued or refreshed.
-  DateTime issueDate;
+  late DateTime issueDate;
 
   /// When this token will expire.
   @Column(indexed: true)
-  DateTime expirationDate;
+  late DateTime expirationDate;
 
   /// The resource owner of this token.
   ///
   /// [ResourceOwnerTableDefinition] must be implemented by some [ManagedObject] subclass in an application.
   /// That subclass will be the 'owner' of tokens. See [ResourceOwnerTableDefinition] for more details.
   @Relate.deferred(DeleteRule.cascade, isRequired: true)
-  ResourceOwnerTableDefinition resourceOwner;
+  late ResourceOwnerTableDefinition resourceOwner;
 
   /// The client this token was issued for.
   @Relate(Symbol('tokens'), onDelete: DeleteRule.cascade, isRequired: true)
-  ManagedAuthClient client;
+  late ManagedAuthClient client;
 
   /// The value 'bearer'.
   @Column(indexed: true, nullable: true)
-  String type;
+  String? type;
 }
 
 /// Represent OAuth 2.0 clients.
@@ -189,18 +193,18 @@ class _ManagedAuthClient {
   /// An OAuth 2.0 client represents the client application that authorizes on behalf of the user
   /// with this server. For example 'com.company.mobile_apps'. This value is required.
   @Column(primaryKey: true)
-  String id;
+  late String id;
 
   /// The client secret, hashed with [salt], if this client is confidential.
   ///
   /// A confidential client requires its secret to be included when used. If this value is null,
   /// this client is a public client.
   @Column(nullable: true)
-  String hashedSecret;
+  String? hashedSecret;
 
   /// The hashing salt for [hashedSecret].
   @Column(nullable: true)
-  String salt;
+  String? salt;
 
   /// The redirect URI for the authorization code flow.
   ///
@@ -208,16 +212,16 @@ class _ManagedAuthClient {
   /// is redirected to this URI with an authorization code that can be exchanged
   /// for a token. Only confidential clients may have a value.
   @Column(nullable: true)
-  String redirectURI;
+  String? redirectURI;
 
   /// Scopes that this client allows.
   ///
   /// If null, this client does not support scopes and all tokens are valid for all routes.
   @Column(nullable: true)
-  String allowedScope;
+  String? allowedScope;
 
   /// Tokens that have been issued for this client.
-  ManagedSet<ManagedAuthToken> tokens;
+  late ManagedSet<ManagedAuthToken> tokens;
 }
 
 /// REQUIRED: Represents an OAuth 2.0 Resource Owner database table.
@@ -234,25 +238,25 @@ class ResourceOwnerTableDefinition implements ResourceOwner {
   /// The primary key of a resource owner.
   @override
   @primaryKey
-  int id;
+  late int id;
 
   /// The username of a resource owner.
   @override
   @Column(unique: true, indexed: true)
-  String username;
+  late String username;
 
   /// The hashed password of a resource owner.
   @override
   @Column(omitByDefault: true)
-  String hashedPassword;
+  late String hashedPassword;
 
   /// The salt for [hashedPassword].
   @override
   @Column(omitByDefault: true)
-  String salt;
+  late String salt;
 
   /// The list of tokens issue for this resource owner.
-  ManagedSet<ManagedAuthToken> tokens;
+  late ManagedSet<ManagedAuthToken> tokens;
 }
 
 /// REQUIRED: An OAuth 2.0 Resource Owner as a [ManagedObject].
@@ -309,8 +313,8 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
   }
 
   @override
-  Future<AuthToken> getToken(AuthServer server,
-      {String byAccessToken, String byRefreshToken}) async {
+  Future<AuthToken?> getToken(AuthServer server,
+      {String? byAccessToken, String? byRefreshToken}) async {
     if (byAccessToken != null && byRefreshToken != null) {
       throw ArgumentError(
           "Exactly one of 'byAccessToken' or 'byRefreshToken' must be non-null.");
@@ -351,7 +355,7 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
 
   @override
   Future addToken(AuthServer server, AuthToken token,
-      {AuthCode issuedFrom}) async {
+      {AuthCode? issuedFrom}) async {
     final storage = ManagedAuthToken.fromToken(token);
     final query = Query<ManagedAuthToken>(context)..values = storage;
 
@@ -398,7 +402,7 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
   }
 
   @override
-  Future<AuthCode> getCode(AuthServer server, String code) async {
+  Future<AuthCode?> getCode(AuthServer server, String code) async {
     final query = Query<ManagedAuthToken>(context)
       ..where((o) => o.code).equalTo(code);
 
@@ -422,7 +426,7 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
   }
 
   @override
-  Future<AuthClient> getClient(AuthServer server, String clientID) async {
+  Future<AuthClient?> getClient(AuthServer server, String clientID) async {
     final query = Query<ManagedAuthClient>(context)
       ..where((o) => o.id).equalTo(clientID);
 
