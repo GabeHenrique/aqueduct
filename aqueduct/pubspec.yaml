@@ -14,8 +14,8 @@ dependencies:
   logging: ^1.0.0
   # isolate_executor: ^2.0.0  # May need replacement
   meta: ^1.8.0
-  # open_api: ^2.0.1  # Temporarily removed - find null-safe alternative
-  # password_hash: ^2.0.0  # Temporarily removed - find null-safe alternative  
+  # open_api: ^2.0.1  # Replaced with stub implementation
+  # password_hash: ^2.0.0  # Replaced with custom implementation  
   path: ^1.8.0
   postgres: ^2.6.0
   # pub_cache: '>=0.2.0 <0.3.0'  # May need replacement

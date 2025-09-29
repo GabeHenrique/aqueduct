@@ -342,23 +342,9 @@ class ManagedAuthDelegate<T extends ManagedAuthResourceOwner>
     return token.asToken();
   }
 
-    final query = Query<ManagedAuthToken>(context);
-    if (byAccessToken != null) {
-      query.where((o) => o.accessToken).equalTo(byAccessToken);
-    } else if (byRefreshToken != null) {
-      query.where((o) => o.refreshToken).equalTo(byRefreshToken);
-    } else {
-      throw ArgumentError(
-          "Exactly one of 'byAccessToken' or 'byRefreshToken' must be non-null.");
-    }
-
-    final token = await query.fetchOne();
-
-    return token?.asToken();
-  }
-
   @override
-  Future<T> getResourceOwner(AuthServer server, String username) {
+  @override
+  Future<T?> getResourceOwner(AuthServer server, String username) {
     final query = Query<T>(context)
       ..where((o) => o.username).equalTo(username)
       ..returningProperties(

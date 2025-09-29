@@ -11,13 +11,13 @@ abstract class ResourceOwner {
   ///
   /// This value must be unique amongst all resource owners. It is often an email address. This value
   /// is used by authenticating users to identify their account.
-  String username;
+  late String username;
 
   /// The hashed password of this instance.
-  String hashedPassword;
+  late String hashedPassword;
 
   /// The salt the [hashedPassword] was hashed with.
-  String salt;
+  late String salt;
 
   /// A unique identifier of this resource owner.
   ///
@@ -75,7 +75,7 @@ abstract class AuthServerDelegate {
   ///
   /// [server] is the [AuthServer] requesting the [AuthToken].
   FutureOr<AuthToken> getToken(AuthServer server,
-      {String byAccessToken, String byRefreshToken});
+      {String? byAccessToken, String? byRefreshToken});
 
   /// This method must delete all [AuthToken] and [AuthCode]s for a [ResourceOwner].
   ///
